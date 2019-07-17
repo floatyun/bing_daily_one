@@ -5,7 +5,6 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import prepare
-import glob
 
 
 def get_bg_img_link(url, host, link='https://cn.bing.com/'):
