@@ -1,0 +1,14 @@
+*.ico
+*.jpg
+*.jpeg
+*.png
+
+build/
+dist/
+__pycache__/
+
+*.ps1
+
+*.cmd
+
+*.spec
