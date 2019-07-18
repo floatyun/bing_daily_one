@@ -38,11 +38,6 @@ def get_img_and_save(img_link, host, prefix):
     pos = len(filename)
     filename += img_link[img_link.rfind('.'):]
     print(filename)
-    if os.path.exists(filename):
-        print(filename, "已经存在了，故增添时间标识")
-        filename = filename[:pos] + \
-            time.strftime("_%H_%M_%S", time.localtime()) + filename[pos:]
-    print(filename)
     headers = prepare.download_img_headers(host)
     img = requests.get(url=img_link, headers=headers).content
     with open(filename, 'wb') as f:
