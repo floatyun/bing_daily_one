@@ -5,6 +5,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import prepare
+import glob
 
 
 def get_bg_img_link(url, host, link='https://cn.bing.com/'):
@@ -40,7 +41,7 @@ def get_img_and_save(img_link, host, prefix, force_download=False):
     if os.path.exists(filename):
         if not force_download:
             print(filename, "已经存在了，故不下载。若想强制下载请添加添加一个-f参数")
-            return
+            return False
         else:
             print(filename, "已经存在了，因强制下载需求，故增添时间标识")
             filename = filename[:pos] + \
@@ -52,20 +53,65 @@ def get_img_and_save(img_link, host, prefix, force_download=False):
         f.write(img)
     print(img_link)
     print('成功下载图片并保存为', filename)
+    return True
+
+
+def load_saved_links(today_log):
+    saved_links = []
+    try:
+        f = open(today_log, "r")
+        for line in f:
+            saved_links.append(line.strip())
+        f.close()
+    except IOError:
+        print('未检测到' + today_log)
+        print('断定今日还未保存任何图片')
+    return saved_links
+
+
+def clear_logs_not_doday(today_log):
+    log_files = glob.glob('*.log')
+    for log in log_files:
+        if log != today_log:
+            os.remove(log)
 
 
 def main(force_download=False):
     os.chdir(R'd:\bing_wallpapers')
-    host = 'cn.bing.com'
-    img_link = get_bg_img_link(
-        url='https://cn.bing.com/?FORM=BEHPTB', host=host)
-    get_img_and_save(img_link, host=host, prefix='国内版',
-                     force_download=force_download)
 
-    img_link = get_bg_img_link(
-        url='https://cn.bing.com/?FORM=BEHPTB&ensearch=1', host=host)
-    get_img_and_save(img_link, host=host, prefix='国际版',
-                     force_download=force_download)
+    today = str(datetime.date.today())
+    today_log = today + '.log'
+
+    clear_logs_not_doday(today_log=today_log)
+    saved_links = load_saved_links(today_log=today_log)  # 载入已经下载保存的图片地址
+    down_links = []
+
+    host = 'cn.bing.com'
+    urls = [
+        'https://cn.bing.com/?FORM=BEHPTB',
+        'https://cn.bing.com/?FORM=BEHPTB&ensearch=1'
+    ]
+
+    for url in urls:
+        img_link = get_bg_img_link(
+            url=url, host=host)
+        if (img_link not in saved_links) and (img_link not in down_links):
+            down_links.append(img_link)
+
+    new_saved_links = []
+    for index, img_link in enumerate(down_links):
+        is_ok = get_img_and_save(
+            img_link, host=host, prefix='%02d' % index,
+            force_download=force_download
+        )
+        if is_ok:
+            new_saved_links.append(img_link)
+    
+    # 新下载保存的链接附加方式写入日志
+    with open(today_log, 'a+') as f:
+        for l in new_saved_links:
+            f.writelines(l + '\n')
+    
     print('运行完毕')
 
 
