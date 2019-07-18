@@ -33,20 +33,16 @@ def get_bg_img_link(url, host, link='https://cn.bing.com/'):
     return link+bg_img_link
 
 
-def get_img_and_save(img_link, host, prefix, force_download=False):
+def get_img_and_save(img_link, host, prefix):
     filename = prefix + str(datetime.date.today())
     pos = len(filename)
     filename += img_link[img_link.rfind('.'):]
     print(filename)
     if os.path.exists(filename):
-        if not force_download:
-            print(filename, "已经存在了，故不下载。若想强制下载请添加添加一个-f参数")
-            return False
-        else:
-            print(filename, "已经存在了，因强制下载需求，故增添时间标识")
-            filename = filename[:pos] + \
-                time.strftime("_%H_%M_%S", time.localtime()) + filename[pos:]
-
+        print(filename, "已经存在了，故增添时间标识")
+        filename = filename[:pos] + \
+            time.strftime("_%H_%M_%S", time.localtime()) + filename[pos:]
+    print(filename)
     headers = prepare.download_img_headers(host)
     img = requests.get(url=img_link, headers=headers).content
     with open(filename, 'wb') as f:
@@ -76,7 +72,7 @@ def clear_logs_not_doday(today_log):
             os.remove(log)
 
 
-def main(force_download=False):
+def main():
     os.chdir(R'd:\bing_wallpapers')
 
     today = str(datetime.date.today())
@@ -99,23 +95,19 @@ def main(force_download=False):
             down_links.append(img_link)
 
     new_saved_links = []
+    off = len(saved_links)
     for index, img_link in enumerate(down_links):
-        is_ok = get_img_and_save(
-            img_link, host=host, prefix='%02d' % index,
-            force_download=force_download
-        )
-        if is_ok:
+        if get_img_and_save(img_link, host=host, prefix='%02d_' % (index + off)):
             new_saved_links.append(img_link)
-    
+
     # 新下载保存的链接附加方式写入日志
     with open(today_log, 'a+') as f:
         for l in new_saved_links:
             f.writelines(l + '\n')
-    
+
     print('运行完毕')
 
 
 if __name__ == '__main__':
-    force_download = '-f' in sys.argv or '-F' in sys.argv
-    main(force_download=force_download)
+    main()
     os.system("pause")
